@@ -14,7 +14,6 @@ import { useSendCalls } from 'wagmi/experimental';
 import { buildSwapTransaction } from '../../api/buildSwapTransaction';
 import { useAnalytics } from '../../core/analytics/hooks/useAnalytics';
 import { BuyEvent } from '../../core/analytics/types';
-import type { AnalyticsEventData } from '../../core/analytics/types';
 import { useCapabilitiesSafe } from '../../internal/hooks/useCapabilitiesSafe';
 import { useValue } from '../../internal/hooks/useValue';
 import { FALLBACK_DEFAULT_MAX_SLIPPAGE } from '../../swap/constants';
@@ -114,13 +113,6 @@ export function BuyProvider({
   // Analytics
   const { sendAnalytics } = useAnalytics();
 
-  const handleAnalytics = useCallback(
-    <T extends BuyEvent>(event: T, data: AnalyticsEventData[T]) => {
-      sendAnalytics(event, data);
-    },
-    [sendAnalytics],
-  );
-
   // Component lifecycle emitters
   useEffect(() => {
     // Error
@@ -135,7 +127,7 @@ export function BuyProvider({
       setTransactionHash(txHash);
       setHasHandledSuccess(true);
 
-      handleAnalytics(BuyEvent.BuySuccess, {
+      sendAnalytics(BuyEvent.BuySuccess, {
         address,
         amount: Number(from?.amount || 0),
         from: from?.token?.address || '',
@@ -157,7 +149,7 @@ export function BuyProvider({
     to,
     address,
     paymaster,
-    handleAnalytics,
+    sendAnalytics,
   ]);
 
   useEffect(() => {
@@ -344,7 +336,7 @@ export function BuyProvider({
           },
         });
       } catch (err) {
-        handleAnalytics(BuyEvent.BuyFailure, {
+        sendAnalytics(BuyEvent.BuyFailure, {
           error: err instanceof Error ? err.message : String(err),
           metadata: { amount },
         });
@@ -371,7 +363,7 @@ export function BuyProvider({
       useAggregator,
       updateLifecycleStatus,
       lifecycleStatus.statusData.maxSlippage,
-      handleAnalytics,
+      sendAnalytics,
     ],
   );
 
@@ -383,7 +375,7 @@ export function BuyProvider({
       }
 
       try {
-        handleAnalytics(BuyEvent.BuyInitiated, {
+        sendAnalytics(BuyEvent.BuyInitiated, {
           amount: Number(from.amount),
           token: from.token.symbol,
         });
@@ -425,7 +417,7 @@ export function BuyProvider({
           walletCapabilities,
         });
       } catch (err) {
-        handleAnalytics(BuyEvent.BuyFailure, {
+        sendAnalytics(BuyEvent.BuyFailure, {
           error: err instanceof Error ? err.message : String(err),
           metadata: {
             token: from.token.symbol,
@@ -459,7 +451,7 @@ export function BuyProvider({
       updateLifecycleStatus,
       useAggregator,
       walletCapabilities,
-      handleAnalytics,
+      sendAnalytics,
     ],
   );
 
