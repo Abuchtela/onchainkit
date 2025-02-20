@@ -222,15 +222,10 @@ export function BuyProvider({
   ]);
 
   const handleAmountChange = useCallback(
-    // biome-ignore lint/complexity/noExcessiveCognitiveComplexity: TODO Refactor this component
-    async (amount: string) => {
-      if (amount !== '' && amount !== '.' && Number.parseFloat(amount) !== 0) {
-        handleAnalytics(BuyEvent.BuyInitiated, {
-          amount: Number(amount),
-          token: to?.token?.symbol || '',
-        });
-      }
-
+    async (
+      amount: string,
+      // biome-ignore lint/complexity/noExcessiveCognitiveComplexity: TODO Refactor this component
+    ) => {
       if (
         to.token === undefined ||
         fromETH.token === undefined ||
@@ -388,6 +383,12 @@ export function BuyProvider({
       }
 
       try {
+        // Add analytics event here at the start of the actual buy
+        handleAnalytics(BuyEvent.BuyInitiated, {
+          amount: Number(from.amount),
+          token: from.token.symbol || '',
+        });
+
         const maxSlippage = lifecycleStatus.statusData.maxSlippage;
         const response = await buildSwapTransaction(
           {

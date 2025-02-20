@@ -1001,16 +1001,29 @@ describe('BuyProvider', () => {
       });
     });
 
-    it('should track BuyInitiated event when getting quote', async () => {
+    it('should not track BuyInitiated event when getting quote', async () => {
       const { result } = renderHook(() => useBuyContext(), { wrapper });
 
       await act(async () => {
         result.current.handleAmountChange('10');
       });
 
-      expect(sendAnalytics).toHaveBeenCalledWith(BuyEvent.BuyInitiated, {
+      expect(sendAnalytics).not.toHaveBeenCalledWith(BuyEvent.BuyInitiated, {
         amount: 10,
         token: degenToken.symbol,
+      });
+    });
+
+    it('should track BuyInitiated event when submitting swap', async () => {
+      renderWithProviders({ Component: TestSwapComponent });
+
+      await act(async () => {
+        fireEvent.click(screen.getByText('Swap'));
+      });
+
+      expect(sendAnalytics).toHaveBeenCalledWith(BuyEvent.BuyInitiated, {
+        amount: Number(mockFromEth.amount),
+        token: mockFromEth.token!.symbol,
       });
     });
 
@@ -1087,19 +1100,19 @@ describe('BuyProvider', () => {
     it('should track BuyInitiated event with empty token when token is undefined', async () => {
       (useBuyTokens as Mock).mockReturnValue({
         from: mockFromDai,
-        to: { ...mockToDegen, token: undefined },
-        fromETH: mockFromEth,
+        to: mockToDegen,
+        fromETH: { ...mockFromEth, token: undefined },
         fromUSDC: mockFromUsdc,
       });
 
-      const { result } = renderHook(() => useBuyContext(), { wrapper });
+      renderWithProviders({ Component: TestSwapComponent });
 
       await act(async () => {
-        result.current.handleAmountChange('10');
+        fireEvent.click(screen.getByText('Swap'));
       });
 
       expect(sendAnalytics).toHaveBeenCalledWith(BuyEvent.BuyInitiated, {
-        amount: 10,
+        amount: Number(mockFromEth.amount),
         token: '',
       });
     });
