@@ -951,13 +951,13 @@ describe('BuyProvider', () => {
   });
 
   describe('analytics', () => {
-    let mockSendAnalytics: Mock;
+    let sendAnalytics: Mock;
 
     beforeEach(() => {
-      mockSendAnalytics = vi.fn();
-      (useAnalytics as Mock).mockReturnValue({
-        sendAnalytics: mockSendAnalytics,
-      });
+      sendAnalytics = vi.fn();
+      (useAnalytics as Mock).mockImplementation(() => ({
+        sendAnalytics,
+      }));
 
       (useAccount as ReturnType<typeof vi.fn>).mockReturnValue({
         address: '0x123',
@@ -972,11 +972,6 @@ describe('BuyProvider', () => {
     });
 
     it('should track BuySuccess event on successful swap', async () => {
-      const mockSendAnalytics = vi.fn();
-      (useAnalytics as Mock).mockReturnValue({
-        sendAnalytics: mockSendAnalytics,
-      });
-
       const { result } = renderHook(() => useBuyContext(), { wrapper });
 
       await act(async () => {
@@ -996,7 +991,7 @@ describe('BuyProvider', () => {
         } as unknown as LifecycleStatus);
       });
 
-      expect(mockSendAnalytics).toHaveBeenCalledWith(BuyEvent.BuySuccess, {
+      expect(sendAnalytics).toHaveBeenCalledWith(BuyEvent.BuySuccess, {
         address: '0x123',
         amount: 0,
         from: '0x50c5725949A6F0c72E6C4a641F24049A917DB0Cb',
@@ -1013,7 +1008,7 @@ describe('BuyProvider', () => {
         result.current.handleAmountChange('10');
       });
 
-      expect(mockSendAnalytics).toHaveBeenCalledWith(BuyEvent.BuyInitiated, {
+      expect(sendAnalytics).toHaveBeenCalledWith(BuyEvent.BuyInitiated, {
         amount: 10,
         token: degenToken.symbol,
       });
@@ -1030,7 +1025,7 @@ describe('BuyProvider', () => {
       });
 
       await waitFor(() => {
-        expect(mockSendAnalytics).toHaveBeenCalledWith(BuyEvent.BuyFailure, {
+        expect(sendAnalytics).toHaveBeenCalledWith(BuyEvent.BuyFailure, {
           error: mockError.message,
           metadata: {
             token: ethToken.symbol,
@@ -1050,7 +1045,7 @@ describe('BuyProvider', () => {
         result.current.handleAmountChange('10');
       });
 
-      expect(mockSendAnalytics).toHaveBeenCalledWith(BuyEvent.BuyFailure, {
+      expect(sendAnalytics).toHaveBeenCalledWith(BuyEvent.BuyFailure, {
         error: mockError.message,
         metadata: { amount: '10' },
       });
@@ -1079,7 +1074,7 @@ describe('BuyProvider', () => {
         } as unknown as LifecycleStatus);
       });
 
-      expect(mockSendAnalytics).toHaveBeenCalledWith(BuyEvent.BuySuccess, {
+      expect(sendAnalytics).toHaveBeenCalledWith(BuyEvent.BuySuccess, {
         address: '0x123',
         amount: 0,
         from: '',
@@ -1103,7 +1098,7 @@ describe('BuyProvider', () => {
         result.current.handleAmountChange('10');
       });
 
-      expect(mockSendAnalytics).toHaveBeenCalledWith(BuyEvent.BuyInitiated, {
+      expect(sendAnalytics).toHaveBeenCalledWith(BuyEvent.BuyInitiated, {
         amount: 10,
         token: '',
       });
@@ -1119,20 +1114,13 @@ describe('BuyProvider', () => {
         result.current.handleAmountChange('10');
       });
 
-      expect(mockSendAnalytics).toHaveBeenCalledWith(BuyEvent.BuyFailure, {
+      expect(sendAnalytics).toHaveBeenCalledWith(BuyEvent.BuyFailure, {
         error: mockError.message,
         metadata: { amount: '10' },
       });
     });
-  });
 
-  describe('error handling', () => {
     it('should handle non-Error objects in error handling', async () => {
-      const mockSendAnalytics = vi.fn();
-      (useAnalytics as Mock).mockReturnValue({
-        sendAnalytics: mockSendAnalytics,
-      });
-
       const nonErrorObject = { message: 'Custom error object' };
       vi.mocked(getBuyQuote).mockRejectedValueOnce(nonErrorObject);
 
@@ -1142,18 +1130,13 @@ describe('BuyProvider', () => {
         result.current.handleAmountChange('10');
       });
 
-      expect(mockSendAnalytics).toHaveBeenCalledWith(BuyEvent.BuyFailure, {
+      expect(sendAnalytics).toHaveBeenCalledWith(BuyEvent.BuyFailure, {
         error: String(nonErrorObject),
         metadata: { amount: '10' },
       });
     });
 
     it('should handle string errors in error handling', async () => {
-      const mockSendAnalytics = vi.fn();
-      (useAnalytics as Mock).mockReturnValue({
-        sendAnalytics: mockSendAnalytics,
-      });
-
       const stringError = 'String error message';
       vi.mocked(getBuyQuote).mockRejectedValueOnce(stringError);
 
@@ -1163,18 +1146,13 @@ describe('BuyProvider', () => {
         result.current.handleAmountChange('10');
       });
 
-      expect(mockSendAnalytics).toHaveBeenCalledWith(BuyEvent.BuyFailure, {
+      expect(sendAnalytics).toHaveBeenCalledWith(BuyEvent.BuyFailure, {
         error: stringError,
         metadata: { amount: '10' },
       });
     });
 
     it('should handle Error objects in error handling', async () => {
-      const mockSendAnalytics = vi.fn();
-      (useAnalytics as Mock).mockReturnValue({
-        sendAnalytics: mockSendAnalytics,
-      });
-
       const errorObject = new Error('Test error message');
       vi.mocked(getBuyQuote).mockRejectedValueOnce(errorObject);
 
@@ -1184,7 +1162,7 @@ describe('BuyProvider', () => {
         result.current.handleAmountChange('10');
       });
 
-      expect(mockSendAnalytics).toHaveBeenCalledWith(BuyEvent.BuyFailure, {
+      expect(sendAnalytics).toHaveBeenCalledWith(BuyEvent.BuyFailure, {
         error: errorObject.message,
         metadata: { amount: '10' },
       });

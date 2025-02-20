@@ -24,7 +24,6 @@ export function BuyDropdown() {
   const handleOnrampClick = useCallback(
     (paymentMethodId: string) => {
       return () => {
-        // Track the buy option selected
         sendAnalytics(BuyEvent.BuyOptionSelected, {
           option: paymentMethodId as BuyOption,
         });

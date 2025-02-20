@@ -114,49 +114,9 @@ export function BuyProvider({
   // Analytics
   const { sendAnalytics } = useAnalytics();
 
-  const handleAnalyticsInitiated = useCallback(
-    (amount: number, tokenSymbol: string) => {
-      const buyData: AnalyticsEventData[BuyEvent.BuyInitiated] = {
-        amount,
-        token: tokenSymbol,
-      };
-
-      sendAnalytics(BuyEvent.BuyInitiated, buyData);
-    },
-    [sendAnalytics],
-  );
-
-  const handleAnalyticsSuccess = useCallback(
-    (params: {
-      address?: string;
-      amount: number;
-      from: string;
-      paymaster: boolean;
-      to: string;
-      transactionHash: string;
-    }) => {
-      const buyData: AnalyticsEventData[BuyEvent.BuySuccess] = {
-        address: params.address,
-        amount: params.amount,
-        from: params.from,
-        paymaster: params.paymaster,
-        to: params.to,
-        transactionHash: params.transactionHash,
-      };
-
-      sendAnalytics(BuyEvent.BuySuccess, buyData);
-    },
-    [sendAnalytics],
-  );
-
-  const handleAnalyticsFailure = useCallback(
-    (error: string, metadata: Record<string, unknown>) => {
-      const buyData: AnalyticsEventData[BuyEvent.BuyFailure] = {
-        error,
-        metadata,
-      };
-
-      sendAnalytics(BuyEvent.BuyFailure, buyData);
+  const handleAnalytics = useCallback(
+    <T extends BuyEvent>(event: T, data: AnalyticsEventData[T]) => {
+      sendAnalytics(event, data);
     },
     [sendAnalytics],
   );
@@ -174,7 +134,7 @@ export function BuyProvider({
       setTransactionHash(txHash);
       setHasHandledSuccess(true);
 
-      handleAnalyticsSuccess({
+      handleAnalytics(BuyEvent.BuySuccess, {
         address,
         amount: Number(from?.amount || 0),
         from: from?.token?.address || '',
@@ -196,7 +156,7 @@ export function BuyProvider({
     to,
     address,
     paymaster,
-    handleAnalyticsSuccess,
+    handleAnalytics,
   ]);
 
   useEffect(() => {
@@ -261,12 +221,12 @@ export function BuyProvider({
   ]);
 
   const handleAmountChange = useCallback(
-    async (
-      amount: string,
-      // biome-ignore lint/complexity/noExcessiveCognitiveComplexity: TODO Refactor this component
-    ) => {
+    async (amount: string) => {
       if (amount !== '' && amount !== '.' && Number.parseFloat(amount) !== 0) {
-        handleAnalyticsInitiated(Number(amount), to?.token?.symbol || '');
+        handleAnalytics(BuyEvent.BuyInitiated, {
+          amount: Number(amount),
+          token: to?.token?.symbol || '',
+        });
       }
 
       if (
@@ -387,10 +347,10 @@ export function BuyProvider({
           },
         });
       } catch (err) {
-        handleAnalyticsFailure(
-          err instanceof Error ? err.message : String(err),
-          { amount },
-        );
+        handleAnalytics(BuyEvent.BuyFailure, {
+          error: err instanceof Error ? err.message : String(err),
+          metadata: { amount },
+        });
         updateLifecycleStatus({
           statusName: 'error',
           statusData: {
@@ -414,8 +374,7 @@ export function BuyProvider({
       useAggregator,
       updateLifecycleStatus,
       lifecycleStatus.statusData.maxSlippage,
-      handleAnalyticsInitiated,
-      handleAnalyticsFailure,
+      handleAnalytics,
     ],
   );
 
@@ -464,13 +423,13 @@ export function BuyProvider({
           walletCapabilities,
         });
       } catch (err) {
-        handleAnalyticsFailure(
-          err instanceof Error ? err.message : String(err),
-          {
+        handleAnalytics(BuyEvent.BuyFailure, {
+          error: err instanceof Error ? err.message : String(err),
+          metadata: {
             token: from.token.symbol,
             amount: from.amount,
           },
-        );
+        });
         const errorMessage = isUserRejectedRequestError(err)
           ? 'Request denied.'
           : GENERIC_ERROR_MESSAGE;
@@ -498,7 +457,7 @@ export function BuyProvider({
       updateLifecycleStatus,
       useAggregator,
       walletCapabilities,
-      handleAnalyticsFailure,
+      handleAnalytics,
     ],
   );
 
