@@ -222,8 +222,8 @@ export function BuyProvider({
   ]);
 
   const handleAmountChange = useCallback(
+    // biome-ignore lint/complexity/noExcessiveCognitiveComplexity: TODO Refactor this component
     async (amount: string) => {
-      // biome-ignore lint/complexity/noExcessiveCognitiveComplexity: TODO Refactor this component
       if (amount !== '' && amount !== '.' && Number.parseFloat(amount) !== 0) {
         handleAnalytics(BuyEvent.BuyInitiated, {
           amount: Number(amount),
