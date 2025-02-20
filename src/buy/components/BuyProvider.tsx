@@ -59,10 +59,8 @@ export function BuyProvider({
   toToken,
   fromToken,
 }: BuyProviderReact) {
-  const {
-    config: { paymaster } = { paymaster: undefined },
-    projectId,
-  } = useOnchainKit();
+  const { config: { paymaster } = { paymaster: undefined }, projectId } =
+    useOnchainKit();
   const { address, chainId } = useAccount();
   const { switchChainAsync } = useSwitchChain();
   // Feature flags
@@ -385,7 +383,7 @@ export function BuyProvider({
       try {
         handleAnalytics(BuyEvent.BuyInitiated, {
           amount: Number(from.amount),
-          token: from.token.symbol || '',
+          token: from.token.symbol,
         });
 
         const maxSlippage = lifecycleStatus.statusData.maxSlippage;
