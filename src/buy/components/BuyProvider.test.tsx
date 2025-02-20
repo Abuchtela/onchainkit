@@ -1023,7 +1023,7 @@ describe('BuyProvider', () => {
 
       expect(sendAnalytics).toHaveBeenCalledWith(BuyEvent.BuyInitiated, {
         amount: Number(mockFromEth.amount),
-        token: mockFromEth.token!.symbol,
+        token: mockFromEth.token?.symbol,
       });
     });
 
