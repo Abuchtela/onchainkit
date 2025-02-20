@@ -121,6 +121,7 @@ export function BuyProvider({
     [sendAnalytics],
   );
 
+  // Component lifecycle emitters
   useEffect(() => {
     // Error
     if (lifecycleStatus.statusName === 'error') {
@@ -222,6 +223,7 @@ export function BuyProvider({
 
   const handleAmountChange = useCallback(
     async (amount: string) => {
+      // biome-ignore lint/complexity/noExcessiveCognitiveComplexity: TODO Refactor this component
       if (amount !== '' && amount !== '.' && Number.parseFloat(amount) !== 0) {
         handleAnalytics(BuyEvent.BuyInitiated, {
           amount: Number(amount),
